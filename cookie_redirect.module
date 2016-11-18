@@ -7,9 +7,6 @@ function cookie_redirect_user_login(&$edit, $account) {
   global $_domain;
 
   if (array_key_exists('form_id', $_POST) && $_POST['form_id'] != 'user_pass_reset') {
-    // set the cookie to current time + 24h
-    setcookie('cookieRedirect', 1, time() + 86400, '/', $_domain);
-
     // check if a redirect is needed
     cookie_redirect_do_redirect();
   }
@@ -39,6 +36,9 @@ function cookie_redirect_do_redirect() {
   
   // check if the user is logged in 
   if ($user->uid) {
+    // set the cookie to current time + 24h
+    setcookie('cookieRedirect', 1, time() + 86400, '/', $_domain);
+    
     // check if the query parameter "rd" is set
     $queryParameters = drupal_get_query_parameters();
     if (array_key_exists('rd', $queryParameters)) {
