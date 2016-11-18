@@ -6,11 +6,6 @@
 function cookie_redirect_user_login(&$edit, $account) {
   global $_domain;
 
-<<<<<<< HEAD
-=======
-  watchdog('info', "Form id = " . $_POST['form_id']);
-  
->>>>>>> 26f8a97913ea843db2518c9d90f3fecb1bbd0216
   if (array_key_exists('form_id', $_POST) && $_POST['form_id'] != 'user_pass_reset') {
     // set the cookie to current time + 24h
     setcookie('cookieRedirect', 1, time() + 86400, '/', $_domain);
@@ -36,12 +31,9 @@ function cookie_redirect_init() {
   cookie_redirect_do_redirect();
 }
 
-<<<<<<< HEAD
 /**
  * the redirect function redirects to the external website that is specified by &rd=EXTERNALWEBSITE
  */
-=======
->>>>>>> 26f8a97913ea843db2518c9d90f3fecb1bbd0216
 function cookie_redirect_do_redirect() {
   global $user;
   
@@ -50,7 +42,6 @@ function cookie_redirect_do_redirect() {
     // check if the query parameter "rd" is set
     $queryParameters = drupal_get_query_parameters();
     if (array_key_exists('rd', $queryParameters)) {
-<<<<<<< HEAD
       // make sure the url is correct
       if (url_is_external($queryParameters['rd'])) {
         // redirect to the target website
@@ -59,10 +50,6 @@ function cookie_redirect_do_redirect() {
       else {
         watchdog('error', 'Cookie redirect module cannot redirect to: ' . $queryParameters['rd']);
       }
-=======
-      // redirect to the target website
-      drupal_goto($queryParameters['rd'], array('external' => TRUE));
->>>>>>> 26f8a97913ea843db2518c9d90f3fecb1bbd0216
     }
   }
 }
