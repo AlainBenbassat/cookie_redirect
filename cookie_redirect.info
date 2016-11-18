@@ -1,0 +1,9 @@
+; $Id$
+ 
+name = cookie_redirect
+description = Sets a cookie and redirects (if aksed)
+package = Business and Code
+configure = admin/config/system/cookieredirect
+core = 7.x
+
+files[] = cookie_redirect.module
