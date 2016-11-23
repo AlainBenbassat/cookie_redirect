@@ -4,8 +4,6 @@
  * hook login
  */
 function cookie_redirect_user_login(&$edit, $account) {
-  global $_domain;
-
   if (array_key_exists('form_id', $_POST) && $_POST['form_id'] != 'user_pass_reset') {
     // check if a redirect is needed
     cookie_redirect_do_redirect();
@@ -16,8 +14,13 @@ function cookie_redirect_user_login(&$edit, $account) {
  * hook logout
  */
 function cookie_redirect_user_logout($account) {
-  // delete the cookie
-  setcookie('cookieRedirect', '', time() - 3600);
+  global $_domain;
+
+  // get the name of the cookie we have to unset
+  $cookietoset = variable_get('cookietoset', 'cookieRedirect');
+
+  // delete the cookie by setting a time in the past
+  setcookie($cookietoset, '', time() - 3600, "/", $_domain);
 }
 
 /**
@@ -32,12 +35,16 @@ function cookie_redirect_init() {
  * the redirect function redirects to the external website that is specified by &rd=EXTERNALWEBSITE
  */
 function cookie_redirect_do_redirect() {
+  global $_domain;
   global $user;
   
   // check if the user is logged in 
   if ($user->uid) {
+    // get the name of the cookie we have to set
+    $cookietoset = variable_get('cookietoset', 'cookieRedirect');
+
     // set the cookie to current time + 24h
-    setcookie('cookieRedirect', 1, time() + 86400, '/', $_domain);
+    setcookie($cookietoset, 1, time() + 86400, '/', $_domain);
     
     // check if the query parameter "rd" is set
     $queryParameters = drupal_get_query_parameters();
@@ -60,7 +67,7 @@ function cookie_redirect_do_redirect() {
 function cookie_redirect_menu() {
   $items['admin/config/system/cookieredirect'] = array(
     'title' => 'Cookie Redirect configure',
-    'description' => 'Specify the redirect URL and other settings.',
+    'description' => 'Specify the CookieRedirect settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('cookie_redirect_admin_form'),
     'access arguments' => array('administer users'),

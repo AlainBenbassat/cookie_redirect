@@ -5,11 +5,11 @@ function cookie_redirect_admin_form() {
     '#type'  => 'fieldset',
     '#title' => t('Redirect options'),
   );
-  $form['cookieredirect']['redirect_url'] = array(
+  $form['cookieredirect']['cookietoset'] = array(
     '#type'          => 'textfield',
-    '#title'         => t('Redirect URL'),
-    '#default_value' => variable_get('cookie_redirect_url', ''),
-    '#description'   => t('Where to go if the cookie is set, and the query parameter rd is given.'),
+    '#title'         => t('Cookie'),
+    '#default_value' => variable_get('cookietoset', ''),
+    '#description'   => t('Which cookie should be set after logging in?'),
   );
 
   $form['#submit'][] = 'cookie_redirect_admin_form_submit';
@@ -18,5 +18,5 @@ function cookie_redirect_admin_form() {
 }
 
 function cookie_redirect_admin_form_submit($form, &$form_state) {
-  variable_set('cookie_redirect_url', $form_state['values']['redirect_url']);
+  variable_set('cookietoset', $form_state['values']['cookietoset']);
 }
