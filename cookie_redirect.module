@@ -14,13 +14,11 @@ function cookie_redirect_user_login(&$edit, $account) {
  * hook logout
  */
 function cookie_redirect_user_logout($account) {
-  global $_domain;
-
   // get the name of the cookie we have to unset
   $cookietoset = variable_get('cookietoset', 'cookieRedirect');
 
   // delete the cookie by setting a time in the past
-  setcookie($cookietoset, '', time() - 3600, "/", $_domain);
+  setcookie($cookietoset, '', time() - 3600, "/", cookie_redirect_getDomain());
 }
 
 /**
@@ -35,7 +33,6 @@ function cookie_redirect_init() {
  * the redirect function redirects to the external website that is specified by &rd=EXTERNALWEBSITE
  */
 function cookie_redirect_do_redirect() {
-  global $_domain;
   global $user;
   
   // check if the user is logged in 
@@ -44,7 +41,7 @@ function cookie_redirect_do_redirect() {
     $cookietoset = variable_get('cookietoset', 'cookieRedirect');
 
     // set the cookie to current time + 24h
-    setcookie($cookietoset, 1, time() + 86400, '/', $_domain);
+    setcookie($cookietoset, 1, time() + 86400, '/', cookie_redirect_getDomain());
     
     // check if the query parameter "rd" is set
     $queryParameters = drupal_get_query_parameters();
@@ -76,4 +73,23 @@ function cookie_redirect_menu() {
   );
  
   return $items;
+}
+
+/**
+ * returns the domain with maximum 2 levels.
+ * e.g. www.myserver.com will return myserver.com
+ */
+function cookie_redirect_getDomain() {
+  global $_domain;
+
+  $parts = explode('.', $_domain);
+
+  if (count($parts) > 2) {
+    $domain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
+  }
+  else {
+    $domain = $_domain;
+  }
+
+  return $domain;  
 }
