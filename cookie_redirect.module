@@ -22,11 +22,15 @@ function cookie_redirect_user_logout($account) {
 }
 
 /**
- * hook init
+ * hook page alter
  */
-function cookie_redirect_init() {
-  // check if a redirect is needed
-  cookie_redirect_do_redirect();
+function cookie_redirect_page_alter(&$page) {
+  global $user;
+
+  if (current_path() == 'user/' . $user->id) {
+    // check if a redirect is needed
+    cookie_redirect_do_redirect();
+  }
 }
 
 /**
@@ -37,19 +41,27 @@ function cookie_redirect_do_redirect() {
   
   // check if the user is logged in 
   if ($user->uid) {
-    // get the name of the cookie we have to set
-    $cookietoset = variable_get('cookietoset', 'cookieRedirect');
-
-    // set the cookie to current time + 24h
-    setcookie($cookietoset, 1, time() + 86400, '/', cookie_redirect_getDomain());
-    
     // check if the query parameter "rd" is set
     $queryParameters = drupal_get_query_parameters();
     if (array_key_exists('rd', $queryParameters)) {
-      // make sure the url is correct
+      // make sure it's a correct external url
       if (url_is_external($queryParameters['rd'])) {
-        // redirect to the target website
-        drupal_goto($queryParameters['rd'], array('external' => TRUE));
+        // check if the user is part of the allowed CiviCRM group
+        if (cookie_redirect_checkCiviCRMGroup($user->uid) == TRUE) {
+          // get the name of the cookie we have to set
+          $cookietoset = variable_get('cookietoset', 'cookieRedirect');
+
+          // set and redirect
+          setcookie($cookietoset, 1, time() + 86400, '/', cookie_redirect_getDomain());
+          drupal_goto($queryParameters['rd'], array('external' => TRUE));
+        }
+        else {
+          // not all conditions are met, remove cookie
+          setcookie($cookietoset, '', time() - 3600, "/", cookie_redirect_getDomain());
+
+          // show error message
+          drupal_set_message('U hebt geen toestemming om het volledige artikel te bekijken', 'error');
+        }
       }
       else {
         watchdog('error', 'Cookie redirect module cannot redirect to: ' . $queryParameters['rd']);
@@ -77,19 +89,76 @@ function cookie_redirect_menu() {
 
 /**
  * returns the domain with maximum 2 levels.
- * e.g. www.myserver.com will return myserver.com
+ * e.g. www.myserver.com will return .myserver.com
+ *
+ * This enables us to set a cookie on a domain level rather than website level.
  */
 function cookie_redirect_getDomain() {
-  global $_domain;
+  global $cookie_domain;
 
-  $parts = explode('.', $_domain);
+  $parts = explode('.', $cookie_domain);
 
   if (count($parts) > 2) {
-    $domain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
+    $domain = '.' . $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
   }
   else {
-    $domain = $_domain;
+    $domain = $cookie_domain;
   }
 
-  return $domain;  
+  return $domain;
+}
+
+/**
+ * Checks if the current user is part of the CiviCRM group that is allowed for single sign-on.
+ * The name of the group should be set in the settings of the module.
+ *
+ * @return bool
+ *
+ */
+function cookie_redirect_checkCiviCRMGroup($userID) {
+  // see if the CiviCRM group is filled in. If not, no check is done.
+  $civiCRMGroup = variable_get('civicrmgrouptocheck', '');
+  if ($civiCRMGroup) {
+    civicrm_initialize();
+
+    // get the contact id of the user
+    $params = array(
+      'uf_id' => $userID,
+      'sequential' => 1,
+    );
+    $results = civicrm_api3('UFMatch', 'get', $params);
+    if ($results['count'] == 0) {
+      // user doesn't have an account, deny access
+      return FALSE;
+    }
+    $contactID = $results['values']['0']['contact_id'];
+
+    // get the ID of the group
+    $params = array(
+      'title' => $civiCRMGroup,
+      'is_active' => 1,
+      'sequential' => 1,
+    );
+    $results = civicrm_api3('Group', 'get', $params);
+    if ($results['count'] == 0) {
+      // the group does not exist or is not active, deny access
+      return FALSE;
+    }
+    $groupID = $results['values']['0']['id'];
+
+    // check if the contact is part of the group
+    $params = array(
+      'contact_id' => $contactID,
+      'group_id' => $groupID,
+      'status' => 'Added',
+      'sequential' => 1,
+    );
+    $results = civicrm_api3('GroupContact', 'get', $params);
+    if ($results['count'] == 0) {
+      // the contact is not part of the group, deny access
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
