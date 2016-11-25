@@ -2,7 +2,7 @@
  
 name = cookie_redirect
 description = Sets a cookie and redirects (if aksed)
-version = 1.0.3
+version = 1.0.4
 package = Single Sign-On Drupal-Joomla
 configure = admin/config/system/cookieredirect
 core = 7.x

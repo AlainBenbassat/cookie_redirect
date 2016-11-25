@@ -22,15 +22,11 @@ function cookie_redirect_user_logout($account) {
 }
 
 /**
- * hook page alter
+ * hook init
  */
-function cookie_redirect_page_alter(&$page) {
-  global $user;
-
-  if (current_path() == 'user/' . $user->id) {
-    // check if a redirect is needed
-    cookie_redirect_do_redirect();
-  }
+function cookie_redirect_init() {
+  // check if a redirect is needed
+  cookie_redirect_do_redirect();
 }
 
 /**
